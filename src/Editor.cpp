@@ -3,6 +3,8 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <cmath>
+//#define lno log10(LINES - 1)
 
 //Default Constructor - no file name mentioned
 Editor::Editor()
@@ -133,6 +135,10 @@ void Editor::handleInput(int c)
                 buff->lines[y - 1] += buff->lines[y];
                 // Delete the line
                 deleteLine();
+                mvdelch(y, 0);
+                mvdelch(y, 0);
+                mvdelch(y, 0);
+                clrtobot();
                 moveUp();
             }
             else if (x > 0)
@@ -148,6 +154,7 @@ void Editor::handleInput(int c)
                 buff->lines[y] += buff->lines[y + 1];
                 // Delete the line
                 deleteLine(y + 1);
+                clrtobot();
             }
             else
             {
@@ -216,6 +223,19 @@ void Editor::moveLeft()
         x--;
         move(y, x);
     }
+    if (x - 1 < 0)
+    {
+        if (y - 1 < 0)
+        {
+            beep();
+        }
+        else
+        {
+            y--;
+            x = buff->lines[y].length();
+            move(y, x);
+        }
+    }
 }
 
 void Editor::moveRight()
@@ -225,10 +245,18 @@ void Editor::moveRight()
         x++;
         move(y, x);
     }
+    if (x + 1 < COLS && x + 1 > buff->lines[y].length() && y + 1 < buff->lines.size())
+    {
+        x = 0;
+        y++;
+        move(y, x);
+    }
 }
 
 void Editor::moveUp()
 {
+    if (y - 1 < 0)
+        beep();
     if (y - 1 >= 0)
     {
         y--;
@@ -268,12 +296,24 @@ void Editor::printBuff()
         }
         else
         {
-            mvprintw(lc, 0, buff->lines[i].c_str());
+            /*int padding = lno;
+            if (lc < 100)
+                padding -= 1;
+            else if (lc < 1000)
+                padding -= 2;
+            else if (lc < 10000)
+                padding -= 3;
+            else if (lc < 100000)
+                padding -= 4;*/
+            attron(A_STANDOUT);
+            mvprintw(lc, 0, "%*d", 3, lc + 1);
+            attroff(A_STANDOUT);
+            mvprintw(lc, 4, buff->lines[i].c_str());
         }
         clrtoeol();
         lc++;
     }
-    move(y, x);
+    move(y, x + 4);
 }
 
 void Editor::printStatusLine()
